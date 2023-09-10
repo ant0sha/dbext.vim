@@ -543,12 +543,12 @@ sub db_vim_print
         $line_txt = "";
     }
 
-    # ans, 2022-04-08 - allow to print from dbms_output empty lines
     my @lines = ();
     if (!defined ($line_txt) || length($line_txt) == 0) {
-      @lines = ("");
+        # from dbms_output it is possible to get empty lines to print
+        @lines = ("");
     } else {
-      @lines = split("\n", $line_txt);
+        @lines = split("\n", $line_txt);
     }
 
     foreach my $line (@lines) {
@@ -973,9 +973,8 @@ sub db_connect
                     LongTruncOk => 1,
                     RaiseError => 0,
                     PrintError => 0,
-                     ## hello from ans
-      ora_charset                     => 'AL32UTF8',
-      ora_ncharset                    => 'AL32UTF8',
+                    ora_charset => 'AL32UTF8',
+                    ora_ncharset => 'AL32UTF8',
                     PrintWarn => 0 }
                     );
         # or die $DBI::errstr;
@@ -1288,10 +1287,9 @@ sub db_query
     return 0;
 }
 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# 2021-09-19 ans: fetch all rows of dbms_output
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-sub fetch_dbms_output {
+# Fetches all available rows of dbms_output from server
+sub fetch_dbms_output
+{
   my ($conn_local) = (@_);
 
   my $max_line_size = 32768; # anything we put here can be too short...
@@ -1306,7 +1304,7 @@ sub fetch_dbms_output {
   $get_lines_st->bind_param_inout(':n', \$num_lines, 50, {ora_type => 1});
 
   $get_lines_st->execute();
-  db_debug("executed get_lines() ok. num_lines = $num_lines");
+  db_debug("executed get_lines() ok. num_lines fetched = $num_lines");
 
   my @text_2 = ();
   if ($num_lines) {
@@ -1323,7 +1321,6 @@ sub fetch_dbms_output {
     }
   }
 
-  #push @text_2, "WARNING: please not foget to close the statement, debug version only!!!";
   $get_lines_st = undef;
 
   ## max_line_size exceeded {
@@ -1699,7 +1696,7 @@ sub db_print_results
     db_vim_print($last_line, "(".scalar(@result_set)." rows)");
     if (@dbms_output) {
       $last_line++;
-      # ans: we need this "join and afterwards split" trick because otherwise
+      # ans: we used to need this "join and afterwards split" trick because otherwise
       # individual rows from @dbms_output are coming encoded differently, see as well
       # exploit Perl_Oracle_DBD_dbms_output/perl_dbd_oracle_dbms_output__inside_vim__simple.vim
       # call :so % | call Check_my_perl__load()
@@ -1710,9 +1707,8 @@ sub db_print_results
       db_debug("db_print_results: \@dbms_output size: ".scalar(@dbms_output));
       my @dbms_output_remade = @dbms_output;
       for my $dol0 (@dbms_output_remade) {
-        #### THIS IS MAGIC !!!!!!!
-        #### THIS_IS_MAGIC !!!!!!!
-        #### THIS IS MAGIC !!!!!!!
+        # needed due to (DBI?) encoding problems when receiving from oracle with plsql
+        # in/out table, see
         my $dol = decode('utf8', ($dol0 // ''));
         db_debug("db_print_results: printed dbms_output[i] (raw non-splitted)    : ".$dol);
         #chomp($dol);
