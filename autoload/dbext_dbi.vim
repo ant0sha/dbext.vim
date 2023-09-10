@@ -1708,7 +1708,7 @@ sub db_print_results
       my @dbms_output_remade = @dbms_output;
       for my $dol0 (@dbms_output_remade) {
         # needed due to (DBI?) encoding problems when receiving from oracle with plsql
-        # in/out table, see
+        # in/out table, see TODO
         my $dol = decode('utf8', ($dol0 // ''));
         db_debug("db_print_results: printed dbms_output[i] (raw non-splitted)    : ".$dol);
         #chomp($dol);
